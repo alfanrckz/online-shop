@@ -30,7 +30,7 @@ export default function Search() {
           size={22}
           color="black"
         />
-        <TextInput placeholder="Search alfan.in" />
+        <TextInput placeholder="Search alfan.store" />
       </Pressable>
       <Feather name="mic" size={24} color="black" />
     </View>
