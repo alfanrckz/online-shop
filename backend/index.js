@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
 const app = express();
-const port = 8081;
+const port = 8080;
 const cors = require("cors");
 app.use(cors());
 
@@ -24,7 +24,7 @@ mongoose
   .catch((err) => {
     console.log("Error connecting to mongoDB", err);
   });
-app.listen(port, "192.168.18.226", () => {
+app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
@@ -60,7 +60,6 @@ const sendVerificationEmail = async (email, verificationToken) => {
     console.error("Error sending verification email:", error);
   }
 };
-
 
 //   try {
 //     const { name, email, password } = req.body;
@@ -113,7 +112,7 @@ app.post("/register", async (req, res) => {
 
     // Send verification email to the user
     // Use your preferred email service or library to send the email
-    sendVerificationEmail(newUser.email, newUser.verificationToken);
+    // sendVerificationEmail(newUser.email, newUser.verificationToken);
 
     res.status(200).json({
       message:
@@ -127,27 +126,28 @@ app.post("/register", async (req, res) => {
 
 //endpoint to verification email
 
-app.get("/verify/:token", async (req, res) => {
-  try {
-    const token = req.params.token;
+// app.get("/verify/:token", async (req, res) => {
+//   try {
+//     const token = req.params.token;
 
-    //Find the user witht the given verification token
-    const user = await User.findOne({ verificationToken: token });
-    if (!user) {
-      return res.status(404).json({ message: "Invalid verification token" });
-    }
+//     //Find the user witht the given verification token
+//     const user = await User.findOne({ verificationToken: token });
+//     console.log(token)
+//     if (!user) {
+//       return res.status(404).json({ message: "Invalid verification token" });
+//     }
 
-    //Mark the user as verified
-    user.verified = true;
-    user.verificationToken = undefined;
+//     //Mark the user as verified
+//     user.verified = true;
+//     user.verificationToken = undefined;
 
-    await user.save();
+//     await user.save();
 
-    res.status(200).json({ message: "Email verified successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Email Verificatioion Failed" });
-  }
-});
+//     res.status(200).json({ message: "Email verified successfully" });
+//   } catch (error) {
+//     res.status(500).json({ message: "Email Verificatioion Failed" });
+//   }
+// });
 
 const generateSecretKey = () => {
   const secretKey = crypto.randomBytes(32).toString("hex");
@@ -173,6 +173,7 @@ app.post("/login", async (req, res) => {
 
     //generate a token
     const token = jwt.sign({ userId: user._id }, secretKey);
+    console.log(token);
     res.status(200).json({ token });
   } catch (error) {
     res.status(500).json({ message: "Login failed" });
@@ -185,7 +186,7 @@ app.post("/login", async (req, res) => {
 app.post("/addresses", async (req, res) => {
   try {
     const { userId, address } = req.body;
-
+    console.log(userId, address);
     //find the user by userId
     const user = await User.findById(userId);
     if (!user) {
@@ -193,7 +194,6 @@ app.post("/addresses", async (req, res) => {
     }
     //add the new address to the user's addresses array
     user.addresses.push(address);
-
     //save the updated user in the backend
     await user.save();
     res.status(200).json({ message: "Address added successfully" });
@@ -205,7 +205,8 @@ app.post("/addresses", async (req, res) => {
 //endpoint to get all the addressses of a particular user
 app.get("/addresses/:userId", async (req, res) => {
   try {
-    const { userId } = req.params;
+    const  userId  = req.params.userId;
+    console.log(userId)
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -216,3 +217,66 @@ app.get("/addresses/:userId", async (req, res) => {
     res.status(500).json({ message: "Error retrieving the addresses" });
   }
 });
+
+//endpoint to store all the order
+
+app.post("/orders", async (req, res) => {
+  try {
+    const { userId, cartItems, totalPrice, shippingAddress, paymentMethod } =
+      req.body;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    //create an array of product objects from the cart items
+    const products = cartItems.map((item) => ({
+      name: item?.title,
+      quantity: item?.quantity,
+      price: item.price,
+      image: item.image,
+    }));
+    //create a new order
+    const order = new Order({
+      user: userId,
+      products: products,
+      totalPrice: totalPrice,
+      shippingAddress: shippingAddress,
+      paymentMethod: paymentMethod,
+    })
+    await order.save()
+    res.status(200).json({ message: "Order created successfully" });
+  } catch (error) {
+    console.log("error creating orders", error);
+    res.status(500).json({ message: "Error creating orders" });
+  }
+});
+
+//get the user profile
+
+app.get("/profile/:userId", async(req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+    if(!user){
+    return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({user });
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving the profile" });
+  }
+})
+
+app.get("/orders/:userId", async(req, res) => {
+  try {
+    const userId = req.params.userId;
+    const orders = await Order.find({ user: userId }).populate("user");
+    if(!orders || orders.length === 0){
+      return res.status(404).json({ message: "No orders found for this user" });
+    }
+    res.status(200).json({orders})
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).json({ message: "Error retrieving the orders" });
+  }
+})
