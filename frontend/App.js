@@ -6,6 +6,8 @@ import store from "./src/stores/store";
 import { ModalPortal } from "react-native-modals";
 import { UserContext } from "./src/context/UserContext";
 
+
+
 export default function App() {
   return (
     <>
