@@ -6,7 +6,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import axios from "axios";
 
 import { Entypo } from "@expo/vector-icons";
-import { UserType } from "../../UserContext";
+import { UserType } from "../context/UserContext";
 
 export default function AddAddressScreen() {
   const navigation = useNavigation();
@@ -20,7 +20,7 @@ export default function AddAddressScreen() {
   const fetchAddresses = async () => {
     try {
       const response = await axios.get(
-        `http://192.168.18.226:8080/addresses/6640ff7e10313021f3d730bd`
+        `http://192.168.18.226:8081/addresses/${userId}`
       );
       const { addresses } = response.data;
       setAddresses(addresses);
@@ -36,7 +36,7 @@ export default function AddAddressScreen() {
     }, [])
   );
 
-  console.log("addresses", addresses);
+  // console.log("addresses", addresses);
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: 50 }}>
       <Search />
@@ -63,6 +63,7 @@ export default function AddAddressScreen() {
         <Pressable>
           {addresses?.map((item, index) => (
             <Pressable
+            key={index}
               style={{
                 borderWidth: 1,
                 borderColor: "#d0d0d0",
