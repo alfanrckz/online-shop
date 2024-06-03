@@ -32,7 +32,7 @@ const RegisterScreen = () => {
     try {
       // Send a post request to the backend API
       const response = await axios.post(
-        "http://192.168.18.226:8081/register",
+        "http://192.168.18.226:8080/register",
         user
       );
       console.log(response);
