@@ -73,7 +73,7 @@ export default function HomeScreen() {
   const fetchAddresses = async () => {
     try {
       const response = await axios.post(
-        `http://192.168.18.226:8081/addresses/${userId}`
+        `https://8853-2404-8000-1004-8ef2-a198-fb1a-af7c-3052.ngrok-free.app/addresses/${userId}`
       );
       const { addresses } = response.data;
       setAddresses(addresses);
